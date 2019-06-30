@@ -29,3 +29,12 @@
 
 - 使用 SQLite3，数据保存在 'data.db'
 - 使用 Flask-sqlalchemy
+
+
+## 任务4：Postgrel + data migration
+
+- 数据库换成 Postgrel
+- 配置 database migration
+- 文件结构修改
+
+文件结构和 config 设置参考了Miguel 的 [The Flask Mega-Tutorial](https://blog.miguelgrinberg.com/post/the-flask-mega-tutorial-part-iv-database)

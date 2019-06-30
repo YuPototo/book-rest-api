@@ -1,5 +1,5 @@
 from flask_restful import Resource, reqparse
-from models.book import BookModel
+from app.models.book import BookModel
 
 
 class Book(Resource):
