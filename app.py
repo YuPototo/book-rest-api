@@ -1,4 +1,5 @@
-from flask import Flask, jsonify, request
+from flask import Flask
+from flask_restful import Resource, Api, reqparse
 
 books = [
     {
@@ -12,63 +13,55 @@ books = [
 ]
 
 app = Flask(__name__)
+api = Api(app)
 
 
-@app.route('/books', methods=['GET'])
-def get_books():
-    return jsonify({
-        "books": books
-    })
+class Booklist(Resource):
+    def get(self):
+        return {'books': books}  # default status_code is 200
 
 
-@app.route('/book/<string:title>', methods=['GET'])
-def get_book(title):
-    for book in books:
-        if book['title'] == title:
-            return jsonify({
-                'book': book
-            })
-    return jsonify({'message': 'No such books'})
+class Book(Resource):
+    parser = reqparse.RequestParser()
+    parser.add_argument('price',
+        type=float,
+        required=True,
+        help="This field cannot be left blank!"
+    )
+
+    def get(self, title):
+        for book in books:
+            if book['title'] == title:
+                return {'book': book}
+        return {'message': 'No such book found'}, 404
+
+    def post(self, title):
+        for book in books:
+            if book['title'] == title:
+                return {'message': f'Book {title} already exists'}, 400
+        data = Book.parser.parse_args()
+        item = {'title': title, 'price': data['price']}
+        books.append(item)
+        return {'book': item}, 201
+
+    def put(self, title):
+        for i in range(len(books)):
+            if books[i]['title']== title:
+                data = Book.parser.parse_args()
+                books[i]['price'] = data['price']
+                return {'book': books[i]}, 200
+        return {'message': f'Book {title} not found.'}, 404
+
+    def delete(self, title):
+        for i in range(len(books)):
+            if books[i]['title']== title:
+                del books[i]
+                return {'message': f'Book {title} deleted'}, 200
+        return {'message': f'Book {title} not found.'}, 404
 
 
-@app.route('/book/<string:title>', methods=['POST'])
-def create_book(title):
-    for book in books:
-        if title == book['title']:
-            return jsonify({
-                'message': 'book already exists'
-            })
-    request_data = request.get_json()
-    new_book = {
-        'title': title,
-        'price': request_data['price']
-    }
-    books.append(new_book)
-    return jsonify(new_book)
-
-
-@app.route('/book/<string:title>', methods=['PUT'])
-def update_book(title):
-    for i in range(len(books)):
-        if books[i]['title'] == title:
-            request_data = request.get_json()
-            updated_book = {
-                'title': title,
-                'price': request_data['price']
-            }
-            books[i] = updated_book
-            return jsonify(updated_book)
-    return jsonify({'message': 'No such book found'})
-
-
-@app.route('/book/<string:title>', methods=['DELETE'])
-def delete_book(title):
-    for i in range(len(books)):
-        if books[i]['title'] == title:
-            del books[i]
-        return jsonify({'message': 'Book deleted'})
-    return jsonify({'message': 'Book no found'})
-
+api.add_resource(Booklist, '/books')
+api.add_resource(Book, '/book/<string:title>')
 
 if __name__ == '__main__':
     app.run(debug=True)
